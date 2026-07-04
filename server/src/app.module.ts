@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TripsModule } from './trips/trips.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { LoreModule } from './lore/lore.module';
 
 export const UPLOAD_DIR =
   process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
@@ -45,6 +46,7 @@ const staticModules = [
     UsersModule,
     TripsModule,
     UploadsModule,
+    LoreModule,
   ],
 })
 export class AppModule {}
