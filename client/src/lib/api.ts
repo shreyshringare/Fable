@@ -1,4 +1,5 @@
 import { useAuthStore } from '../store/auth';
+import { toast } from '../store/toast';
 
 export class ApiError extends Error {
   status: number;
@@ -8,19 +9,29 @@ export class ApiError extends Error {
   }
 }
 
-async function tryRefresh(): Promise<boolean> {
-  try {
-    const res = await fetch('/api/v1/auth/refresh', {
-      method: 'POST',
-      credentials: 'include',
-    });
-    if (!res.ok) return false;
-    const data = await res.json();
-    useAuthStore.getState().setSession(data.user, data.accessToken);
-    return true;
-  } catch {
-    return false;
-  }
+// Single-flight refresh: concurrent 401s share one refresh call, because
+// refresh tokens rotate and a second parallel attempt would be rejected.
+let refreshInFlight: Promise<boolean> | null = null;
+
+function tryRefresh(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    try {
+      const res = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      useAuthStore.getState().setSession(data.user, data.accessToken);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+  return refreshInFlight;
 }
 
 async function request<T>(
@@ -54,6 +65,9 @@ async function request<T>(
     } catch {
       /* non-JSON error body */
     }
+    // Auth endpoints render errors inline in their forms; everything else
+    // surfaces as a toast so failed mutations are never silent.
+    if (!path.startsWith('/auth/')) toast(message);
     throw new ApiError(res.status, message);
   }
   if (res.status === 204) return undefined as T;

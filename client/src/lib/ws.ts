@@ -36,9 +36,16 @@ class FableSocket {
         /* ignore malformed frames */
       }
     };
-    this.ws.onclose = () => {
+    this.ws.onclose = async (e) => {
       this.ws = null;
       if (this.closedByUs) return;
+      // 4001 = server rejected the token (access tokens expire every 15m).
+      // Refresh before reconnecting or we would loop on a dead token.
+      if (e.code === 4001) {
+        const { api } = await import('./api');
+        const ok = await api.refresh();
+        if (!ok) return;
+      }
       const delay = Math.min(1000 * 2 ** this.retry, 15000);
       this.retry += 1;
       this.reconnectTimer = setTimeout(() => this.connect(), delay);

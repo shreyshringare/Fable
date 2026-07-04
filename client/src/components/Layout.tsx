@@ -4,6 +4,7 @@ import { socket } from '../lib/ws';
 import { useAuthStore } from '../store/auth';
 import Avatar from './Avatar';
 import DarkModeToggle from './DarkModeToggle';
+import Toasts from './Toasts';
 
 export default function Layout() {
   const user = useAuthStore((s) => s.user);
@@ -46,6 +47,7 @@ export default function Layout() {
       <main className="flex-1">
         <Outlet />
       </main>
+      <Toasts />
     </div>
   );
 }
