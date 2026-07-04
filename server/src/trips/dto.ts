@@ -134,6 +134,10 @@ export class CreatePlaceDto {
   @IsOptional()
   @IsString()
   hours?: string;
+
+  @IsOptional()
+  @IsString()
+  website?: string;
 }
 
 export class UpdatePlaceDto extends CreatePlaceDto {

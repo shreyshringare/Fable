@@ -61,8 +61,8 @@ export class PlacesController {
     const id = randomUUID();
     this.dbs.db
       .prepare(
-        `INSERT INTO places (id, day_id, trip_id, name, lat, lng, address, category, notes, order_index, photo_url, rating, hours)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO places (id, day_id, trip_id, name, lat, lng, address, category, notes, order_index, photo_url, rating, hours, website)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         id,
@@ -78,6 +78,7 @@ export class PlacesController {
         dto.photo_url ?? null,
         dto.rating ?? null,
         dto.hours ?? null,
+        dto.website ?? null,
       );
     const place = this.dbs.db.prepare('SELECT * FROM places WHERE id = ?').get(id);
     this.ws.broadcast(tripId, 'PLACE_ADDED', place);
@@ -135,6 +136,7 @@ export class PlacesController {
       'photo_url',
       'rating',
       'hours',
+      'website',
       'order_index',
       'day_id',
     ] as const;

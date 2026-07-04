@@ -12,6 +12,7 @@ export interface LoreResult {
   query: string;
   about: string | null;
   image: string | null;
+  official_website: string | null;
   facts: LoreFact[];
 }
 
@@ -59,6 +60,22 @@ export class LoreService {
       .run(key, JSON.stringify(value));
   }
 
+  private async wikidataWebsite(qid: string): Promise<string | null> {
+    try {
+      const res = await fetch(
+        `https://www.wikidata.org/wiki/Special:EntityData/${encodeURIComponent(qid)}.json`,
+        { headers: { 'User-Agent': UA } },
+      );
+      if (!res.ok) return null;
+      const data: any = await res.json();
+      const claims = data?.entities?.[qid]?.claims?.P856;
+      const url = claims?.[0]?.mainsnak?.datavalue?.value;
+      return typeof url === 'string' ? url : null;
+    } catch {
+      return null;
+    }
+  }
+
   private async findTitles(q: string, lat?: number, lng?: number): Promise<string[]> {
     if (lat !== undefined && lng !== undefined) {
       const geo = await this.wiki({
@@ -100,17 +117,23 @@ export class LoreService {
   }
 
   async getLore(q: string, lat?: number, lng?: number): Promise<LoreResult> {
-    const key = `${q.toLowerCase()}|${lat?.toFixed(3) ?? ''}|${lng?.toFixed(3) ?? ''}`;
+    const key = `v2|${q.toLowerCase()}|${lat?.toFixed(3) ?? ''}|${lng?.toFixed(3) ?? ''}`;
     const cached = this.cacheGet(key);
     if (cached) return cached;
 
-    const result: LoreResult = { query: q, about: null, image: null, facts: [] };
+    const result: LoreResult = {
+      query: q,
+      about: null,
+      image: null,
+      official_website: null,
+      facts: [],
+    };
     try {
       const titles = await this.findTitles(q, lat, lng);
       for (const title of titles.slice(0, 3)) {
         const data = await this.wiki({
           action: 'query',
-          prop: 'extracts|pageimages',
+          prop: 'extracts|pageimages|pageprops',
           explaintext: '1',
           titles: title,
           piprop: 'thumbnail',
@@ -124,6 +147,11 @@ export class LoreService {
           String(page.title).replace(/ /g, '_'),
         )}`;
         if (!result.image && page.thumbnail?.source) result.image = page.thumbnail.source;
+        // Official website lives in Wikidata (property P856), not Wikipedia.
+        const qid = page.pageprops?.wikibase_item;
+        if (!result.official_website && qid) {
+          result.official_website = await this.wikidataWebsite(qid);
+        }
         const sections = this.splitSections(page.extract);
         if (!result.about && sections[0]?.body) {
           result.about = this.clip(sections[0].body, 500);
