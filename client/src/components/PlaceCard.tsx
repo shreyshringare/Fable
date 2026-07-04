@@ -28,6 +28,7 @@ export default function PlaceCard({
   });
 
   async function remove() {
+    if (!window.confirm(`Remove "${place.name}" from this day?`)) return;
     await api.delete(`/trips/${place.trip_id}/days/${place.day_id}/places/${place.id}`);
   }
 

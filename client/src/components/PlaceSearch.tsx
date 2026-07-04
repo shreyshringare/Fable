@@ -9,6 +9,7 @@ export default function PlaceSearch({ dayId }: { dayId: string }) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [open, setOpen] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [active, setActive] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function PlaceSearch({ dayId }: { dayId: string }) {
     timer.current = setTimeout(async () => {
       const r = await searchPlaces(query);
       setResults(r);
+      setActive(0);
       setOpen(true);
       setSearching(false);
     }, 450);
@@ -50,6 +52,21 @@ export default function PlaceSearch({ dayId }: { dayId: string }) {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length && setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 200)}
+          onKeyDown={(e) => {
+            if (!open || !results.length) return;
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              setActive((i) => (i + 1) % results.length);
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              setActive((i) => (i - 1 + results.length) % results.length);
+            } else if (e.key === 'Enter') {
+              e.preventDefault();
+              add(results[active]);
+            } else if (e.key === 'Escape') {
+              setOpen(false);
+            }
+          }}
         />
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
           {searching ? '⏳' : '🔍'}
@@ -60,7 +77,10 @@ export default function PlaceSearch({ dayId }: { dayId: string }) {
           {results.map((r, i) => (
             <button
               key={i}
-              className="flex w-full items-start gap-2 px-3 py-2.5 text-left hover:bg-indigo-50 dark:hover:bg-gray-700"
+              className={`flex w-full items-start gap-2 px-3 py-2.5 text-left hover:bg-indigo-50 dark:hover:bg-gray-700 ${
+                i === active ? 'bg-indigo-50 dark:bg-gray-700' : ''
+              }`}
+              onMouseEnter={() => setActive(i)}
               onMouseDown={() => add(r)}
             >
               <span>{PLACE_CATEGORIES.find((c) => c.value === r.category)?.icon ?? '📍'}</span>
