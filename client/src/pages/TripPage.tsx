@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { format } from 'date-fns';
+import { differenceInCalendarDays, format } from 'date-fns';
 import { socket } from '../lib/ws';
 import { formatMoney, toUSD } from '../lib/currency';
 import { useAuthStore } from '../store/auth';
@@ -39,13 +39,20 @@ function TabSkeleton() {
 export default function TripPage() {
   const { tripId } = useParams<{ tripId: string }>();
   const navigate = useNavigate();
-  const { trip, members, presence, places, budget, packing, loading, load, reset } =
+  const { trip, members, presence, places, budget, packing, messages, loading, load, reset } =
     useTripStore();
   const user = useAuthStore((s) => s.user);
   const [tab, setTab] = useState<TabId>('planner');
   const [error, setError] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [seenMessages, setSeenMessages] = useState(0);
   const hadTrip = useRef(false);
+
+  // Unread chat badge: count messages that arrived while another tab was open.
+  useEffect(() => {
+    if (tab === 'chat' || loading) setSeenMessages(messages.length);
+  }, [tab, loading, messages.length]);
+  const unread = tab === 'chat' ? 0 : Math.max(0, messages.length - seenMessages);
 
   useEffect(() => {
     if (!tripId) return;
@@ -96,8 +103,25 @@ export default function TripPage() {
   const budgetTotal = budget.reduce((sum, b) => sum + toUSD(b.amount, b.currency), 0);
   const packedCount = packing.filter((i) => i.packed).length;
 
+  let countdown: string | null = null;
+  if (trip.start_date && trip.end_date) {
+    const toStart = differenceInCalendarDays(new Date(`${trip.start_date}T00:00:00`), new Date());
+    const toEnd = differenceInCalendarDays(new Date(`${trip.end_date}T00:00:00`), new Date());
+    if (toStart > 0) countdown = `🛫 In ${toStart} day${toStart > 1 ? 's' : ''}`;
+    else if (toEnd >= 0) countdown = `🌍 Day ${1 - toStart} of the trip`;
+    else countdown = '🏁 Trip completed';
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
+      {trip.cover_image && (
+        <div
+          className="mb-5 h-36 rounded-xl bg-cover bg-center shadow-sm sm:h-44"
+          style={{
+            backgroundImage: `linear-gradient(to top, rgb(0 0 0 / 0.25), transparent 60%), url(${trip.cover_image})`,
+          }}
+        />
+      )}
       <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-extrabold">{trip.name}</h1>
@@ -112,9 +136,14 @@ export default function TripPage() {
           )}
         </div>
         <div className="flex -space-x-2" title="Currently viewing">
-          {presence.map((u) => (
+          {presence.slice(0, 5).map((u) => (
             <Avatar key={u.id} name={u.name} url={u.avatar_url} size={30} title={`${u.name} is here`} />
           ))}
+          {presence.length > 5 && (
+            <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold text-gray-600 ring-2 ring-white dark:bg-gray-700 dark:text-gray-300 dark:ring-gray-800">
+              +{presence.length - 5}
+            </div>
+          )}
         </div>
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -129,6 +158,11 @@ export default function TripPage() {
 
       {/* Quick stats */}
       <div className="mt-3 mb-5 flex flex-wrap gap-2 text-xs">
+        {countdown && (
+          <span className="rounded-full bg-amber-100 px-3 py-1 font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+            {countdown}
+          </span>
+        )}
         <span className="rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
           📍 {places.length} place{places.length !== 1 ? 's' : ''}
         </span>
@@ -155,17 +189,24 @@ export default function TripPage() {
             }`}
           >
             <span>{t.icon}</span> {t.label}
+            {t.id === 'chat' && unread > 0 && (
+              <span className="ml-0.5 rounded-full bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                {unread > 9 ? '9+' : unread}
+              </span>
+            )}
           </button>
         ))}
       </div>
 
       <Suspense fallback={<TabSkeleton />}>
-        {tab === 'planner' && <PlannerTab canEdit={canEdit} />}
-        {tab === 'reservations' && <ReservationsTab canEdit={canEdit} />}
-        {tab === 'budget' && <BudgetTab canEdit={canEdit} />}
-        {tab === 'packing' && <PackingTab canEdit={canEdit} />}
-        {tab === 'chat' && <ChatTab canEdit={canEdit} />}
-        {tab === 'members' && <MembersPanel role={role} />}
+        <div key={tab} className="fade-in">
+          {tab === 'planner' && <PlannerTab canEdit={canEdit} />}
+          {tab === 'reservations' && <ReservationsTab canEdit={canEdit} />}
+          {tab === 'budget' && <BudgetTab canEdit={canEdit} />}
+          {tab === 'packing' && <PackingTab canEdit={canEdit} />}
+          {tab === 'chat' && <ChatTab canEdit={canEdit} />}
+          {tab === 'members' && <MembersPanel role={role} />}
+        </div>
       </Suspense>
 
       {showSettings && (

@@ -1,11 +1,29 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
+import { differenceInCalendarDays, format } from 'date-fns';
 import { api } from '../lib/api';
 import CreateTripModal from '../components/CreateTripModal';
 import type { Trip } from '../types';
 
+type TripStatus = { label: string; cls: string; rank: number; sortKey: string };
+
+function tripStatus(trip: Trip): TripStatus {
+  if (!trip.start_date || !trip.end_date) {
+    return { label: 'Dates TBD', cls: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300', rank: 2, sortKey: '9999' };
+  }
+  const toStart = differenceInCalendarDays(new Date(`${trip.start_date}T00:00:00`), new Date());
+  const toEnd = differenceInCalendarDays(new Date(`${trip.end_date}T00:00:00`), new Date());
+  if (toStart <= 0 && toEnd >= 0) {
+    return { label: '🌍 Happening now', cls: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300', rank: 0, sortKey: trip.start_date };
+  }
+  if (toStart > 0) {
+    return { label: `🛫 In ${toStart} day${toStart > 1 ? 's' : ''}`, cls: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300', rank: 1, sortKey: trip.start_date };
+  }
+  return { label: 'Completed', cls: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400', rank: 3, sortKey: trip.end_date };
+}
+
 function TripCard({ trip }: { trip: Trip }) {
+  const status = tripStatus(trip);
   return (
     <Link
       to={`/trips/${trip.id}`}
@@ -17,9 +35,14 @@ function TripCard({ trip }: { trip: Trip }) {
         )}
       </div>
       <div className="p-4">
-        <h3 className="font-bold group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-          {trip.name}
-        </h3>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="font-bold group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+            {trip.name}
+          </h3>
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${status.cls}`}>
+            {status.label}
+          </span>
+        </div>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           {trip.start_date && trip.end_date
             ? `${format(new Date(`${trip.start_date}T00:00:00`), 'MMM d')} – ${format(
@@ -47,6 +70,16 @@ export default function DashboardPage() {
   useEffect(() => {
     api.get<Trip[]>('/trips').then(setTrips).catch(() => setTrips([]));
   }, []);
+
+  // Ongoing first, then upcoming (soonest first), then undated, then past.
+  const sorted = useMemo(
+    () =>
+      (trips ?? [])
+        .map((t) => ({ t, s: tripStatus(t) }))
+        .sort((a, b) => a.s.rank - b.s.rank || a.s.sortKey.localeCompare(b.s.sortKey))
+        .map((x) => x.t),
+    [trips],
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -81,8 +114,8 @@ export default function DashboardPage() {
           </button>
         </div>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {trips.map((t) => (
+        <div className="fade-in grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {sorted.map((t) => (
             <TripCard key={t.id} trip={t} />
           ))}
         </div>
