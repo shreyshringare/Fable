@@ -119,8 +119,8 @@ export default function TripPage() {
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400">
         {trip.start_date && trip.end_date
-          ? `${format(new Date(trip.start_date), 'MMM d')} – ${format(
-              new Date(trip.end_date),
+          ? `${format(new Date(`${trip.start_date}T00:00:00`), 'MMM d')} – ${format(
+              new Date(`${trip.end_date}T00:00:00`),
               'MMM d, yyyy',
             )}`
           : 'Dates TBD'}

@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/auth';
 import { useTripStore } from '../store/trip';
@@ -8,6 +9,7 @@ import Avatar from './Avatar';
 export default function MembersPanel({ role }: { role: Role }) {
   const { members, presence, tripId } = useTripStore();
   const user = useAuthStore((s) => s.user);
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'editor' | 'viewer'>('editor');
   const [error, setError] = useState('');
@@ -36,7 +38,13 @@ export default function MembersPanel({ role }: { role: Role }) {
   }
 
   async function remove(uid: string) {
+    const leaving = uid === user?.id;
+    if (leaving && !window.confirm('Leave this trip?')) return;
     const updated = await api.delete<Member[]>(`/trips/${tripId}/members/${uid}`);
+    if (leaving) {
+      navigate('/');
+      return;
+    }
     useTripStore.setState({ members: updated });
   }
 

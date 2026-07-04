@@ -39,9 +39,12 @@ export default function LoginPage() {
         <div className="mx-auto w-72 max-w-full sm:w-80 lg:w-full lg:max-w-md">
           <Globe />
           <div className="-mt-4 text-center lg:mt-0">
-            <h1 className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">Fable</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Plan adventures together, in real time.
+            <h1 className="text-4xl font-extrabold tracking-tight">
+              Every journey deserves a <span className="text-gradient">story</span>
+            </h1>
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+              Fable is your self-hosted trip planner — live collaboration, 3D maps,
+              shared budgets, and the myths behind every place you visit.
             </p>
           </div>
         </div>

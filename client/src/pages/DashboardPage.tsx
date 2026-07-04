@@ -9,7 +9,7 @@ function TripCard({ trip }: { trip: Trip }) {
   return (
     <Link
       to={`/trips/${trip.id}`}
-      className="card group overflow-hidden transition-transform hover:-translate-y-0.5 hover:shadow-lg"
+      className="card group overflow-hidden transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-lg dark:hover:border-indigo-600"
     >
       <div className="h-32 bg-gradient-to-br from-indigo-500 to-amber-400">
         {trip.cover_image && (
@@ -22,8 +22,8 @@ function TripCard({ trip }: { trip: Trip }) {
         </h3>
         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
           {trip.start_date && trip.end_date
-            ? `${format(new Date(trip.start_date), 'MMM d')} – ${format(
-                new Date(trip.end_date),
+            ? `${format(new Date(`${trip.start_date}T00:00:00`), 'MMM d')} – ${format(
+                new Date(`${trip.end_date}T00:00:00`),
                 'MMM d, yyyy',
               )}`
             : 'Dates TBD'}

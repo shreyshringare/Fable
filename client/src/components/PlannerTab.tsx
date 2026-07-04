@@ -25,21 +25,30 @@ function DayButton({
   sub,
   active,
   weather,
+  count,
+  canEdit,
   onClick,
+  onDelete,
 }: {
   dayId: string;
   label: string;
   sub: string;
   active: boolean;
   weather?: DayWeather;
+  count: number;
+  canEdit: boolean;
   onClick: () => void;
+  onDelete: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `day:${dayId}` });
   return (
-    <button
+    <div
       ref={setNodeRef}
       onClick={onClick}
-      className={`w-full rounded-lg px-3 py-2 text-left transition-colors ${
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick()}
+      className={`group w-full cursor-pointer rounded-lg px-3 py-2 text-left transition-colors ${
         active
           ? 'bg-indigo-600 text-white'
           : isOver
@@ -47,29 +56,61 @@ function DayButton({
             : 'hover:bg-gray-100 dark:hover:bg-gray-700'
       }`}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-1">
         <span className="text-sm font-semibold">{label}</span>
-        {weather && (
+        <span className="flex items-center gap-1.5">
+          {count > 0 && (
+            <span
+              className={`rounded-full px-1.5 text-[10px] font-bold ${
+                active
+                  ? 'bg-white/25 text-white'
+                  : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
+              }`}
+            >
+              {count}
+            </span>
+          )}
+          {weather && (
+            <span
+              className="text-xs"
+              title={`${weatherInfo(weather.code).label} ${weather.tmin}–${weather.tmax}°C${
+                weather.approximate ? ' (seasonal average)' : ''
+              }`}
+            >
+              {weatherInfo(weather.code).icon} {weather.tmax}°
+            </span>
+          )}
+        </span>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className={`text-xs ${active ? 'text-indigo-200' : 'text-gray-500 dark:text-gray-400'}`}>
+          {sub}
+        </span>
+        {canEdit && (
           <span
-            className="text-xs"
-            title={`${weatherInfo(weather.code).label} ${weather.tmin}–${weather.tmax}°C${
-              weather.approximate ? ' (seasonal average)' : ''
+            role="button"
+            title="Delete day"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className={`hidden text-xs group-hover:inline ${
+              active ? 'text-indigo-200 hover:text-white' : 'text-gray-400 hover:text-red-500'
             }`}
           >
-            {weatherInfo(weather.code).icon} {weather.tmax}°
+            ✕
           </span>
         )}
       </div>
-      <div className={`text-xs ${active ? 'text-indigo-200' : 'text-gray-500 dark:text-gray-400'}`}>
-        {sub}
-      </div>
-    </button>
+    </div>
   );
 }
 
 export default function PlannerTab({ canEdit }: { canEdit: boolean }) {
-  const { days, places, selectedDayId, selectDay, setPlacesForDay, trip } = useTripStore();
+  const { days, places, selectedDayId, selectDay, setPlacesForDay, trip, tripId } = useTripStore();
   const [weather, setWeather] = useState<Record<string, DayWeather>>({});
+  const [newDayDate, setNewDayDate] = useState('');
+  const [showAddDay, setShowAddDay] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   const dayPlaces = useMemo(
@@ -138,10 +179,10 @@ export default function PlannerTab({ canEdit }: { canEdit: boolean }) {
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
       <div className="grid gap-4 lg:grid-cols-[220px_1fr_1fr]">
         {/* Days sidebar */}
-        <aside className="card h-fit max-h-[75vh] space-y-1 overflow-y-auto p-2">
+        <aside className="card h-fit max-h-[75vh] min-w-0 space-y-1 overflow-y-auto p-2">
           {days.length === 0 && (
             <p className="p-3 text-sm text-gray-500 dark:text-gray-400">
-              No days yet — set trip dates to generate the itinerary.
+              No days yet — set trip dates in ⚙️ settings, or add one below.
             </p>
           )}
           {days.map((d, i) => (
@@ -149,16 +190,52 @@ export default function PlannerTab({ canEdit }: { canEdit: boolean }) {
               key={d.id}
               dayId={d.id}
               label={`Day ${i + 1}`}
-              sub={format(new Date(d.date), 'EEE, MMM d')}
+              sub={format(new Date(`${d.date}T00:00:00`), 'EEE, MMM d')}
               active={d.id === selectedDayId}
               weather={weather[d.date]}
+              count={places.filter((p) => p.day_id === d.id).length}
+              canEdit={canEdit}
               onClick={() => selectDay(d.id)}
+              onDelete={async () => {
+                if (!window.confirm('Delete this day and everything in it?')) return;
+                await api.delete(`/trips/${tripId}/days/${d.id}`);
+              }}
             />
           ))}
+          {canEdit &&
+            (showAddDay ? (
+              <form
+                className="flex gap-1 p-1"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!newDayDate) return;
+                  await api.post(`/trips/${tripId}/days`, { date: newDayDate });
+                  setNewDayDate('');
+                  setShowAddDay(false);
+                }}
+              >
+                <input
+                  type="date"
+                  className="input !px-2 !py-1 text-xs"
+                  value={newDayDate}
+                  onChange={(e) => setNewDayDate(e.target.value)}
+                  autoFocus
+                  required
+                />
+                <button className="btn-primary !px-2 !py-1 text-xs">✓</button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setShowAddDay(true)}
+                className="w-full rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs font-medium text-gray-500 hover:border-indigo-400 hover:text-indigo-600 dark:border-gray-600 dark:text-gray-400"
+              >
+                + Add day
+              </button>
+            ))}
         </aside>
 
         {/* Day planner */}
-        <section className="space-y-4">
+        <section className="min-w-0 space-y-4">
           {selectedDay ? (
             <>
               {canEdit && <PlaceSearch dayId={selectedDay.id} />}
@@ -191,7 +268,7 @@ export default function PlannerTab({ canEdit }: { canEdit: boolean }) {
         </section>
 
         {/* Map */}
-        <section className="h-[75vh] min-h-[400px]">
+        <section className="h-[75vh] min-h-[400px] min-w-0">
           <MapView canEdit={canEdit} />
         </section>
       </div>
