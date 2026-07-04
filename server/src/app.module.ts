@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { TripsModule } from './trips/trips.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { LoreModule } from './lore/lore.module';
+import { HealthController } from './health.controller';
 
 export const UPLOAD_DIR =
   process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
@@ -48,5 +49,6 @@ const staticModules = [
     UploadsModule,
     LoreModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}

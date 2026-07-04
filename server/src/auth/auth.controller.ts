@@ -1,7 +1,8 @@
-import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './auth.dto';
+import { AuthRateLimitGuard } from './rate-limit.guard';
 
 const REFRESH_COOKIE = 'fable_rt';
 const COOKIE_OPTS = {
@@ -17,6 +18,7 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('register')
+  @UseGuards(AuthRateLimitGuard)
   register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
     const { user, accessToken, refreshToken } = this.auth.register(
       dto.email,
@@ -29,6 +31,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
+  @UseGuards(AuthRateLimitGuard)
   login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const { user, accessToken, refreshToken } = this.auth.login(dto.email, dto.password);
     res.cookie(REFRESH_COOKIE, refreshToken, COOKIE_OPTS);

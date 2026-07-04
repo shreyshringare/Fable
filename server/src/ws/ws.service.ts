@@ -11,6 +11,7 @@ interface WsClient {
   name: string;
   avatarUrl: string | null;
   trips: Set<string>;
+  alive: boolean;
 }
 
 @Injectable()
@@ -24,6 +25,22 @@ export class WsService {
 
   attach(server: HttpServer) {
     const wss = new WebSocketServer({ server, path: '/ws' });
+
+    // Heartbeat: terminate connections that miss two ping cycles so
+    // presence never shows ghosts after network drops.
+    const heartbeat = setInterval(() => {
+      for (const c of this.clients) {
+        if (!c.alive) {
+          c.ws.terminate();
+          continue;
+        }
+        c.alive = false;
+        c.ws.ping();
+      }
+    }, 30_000);
+    heartbeat.unref();
+    wss.on('close', () => clearInterval(heartbeat));
+
     wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
       const url = new URL(req.url || '/', 'http://localhost');
       const token = url.searchParams.get('token') || '';
@@ -47,8 +64,12 @@ export class WsService {
         name: user.name,
         avatarUrl: user.avatar_url,
         trips: new Set(),
+        alive: true,
       };
       this.clients.add(client);
+      ws.on('pong', () => {
+        client.alive = true;
+      });
       ws.on('message', (raw) => {
         try {
           this.onMessage(client, JSON.parse(String(raw)));
