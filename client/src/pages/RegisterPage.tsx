@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuthStore } from '../store/auth';
 import type { User } from '../types';
+import Globe from '../components/Globe';
 
 export default function RegisterPage() {
   const { user, setSession } = useAuthStore();
@@ -37,9 +38,9 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="card w-full max-w-md p-8">
-        <div className="mb-6 text-center">
-          <div className="text-4xl">🧭</div>
-          <h1 className="mt-2 text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">
+        <div className="mb-4 text-center">
+          <Globe className="mx-auto -my-6 w-44" />
+          <h1 className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">
             Join Fable
           </h1>
         </div>

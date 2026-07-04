@@ -42,3 +42,62 @@ body {
     @apply animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700;
   }
 }
+
+/* ---- Globe hero animation ---- */
+.globe-hero .tw {
+  animation: globe-twinkle 3s ease-in-out infinite;
+}
+.globe-hero .tw-2 {
+  animation-delay: 1s;
+}
+.globe-hero .tw-3 {
+  animation-delay: 2s;
+}
+.globe-hero .globe-spin {
+  animation: globe-drift 26s linear infinite;
+}
+.globe-hero .cloud-1 {
+  animation: globe-cloud 12s ease-in-out infinite;
+}
+.globe-hero .cloud-2 {
+  animation: globe-cloud 15s ease-in-out infinite reverse;
+}
+
+@keyframes globe-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes globe-drift {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-14px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+@keyframes globe-cloud {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .globe-hero .tw,
+  .globe-hero .globe-spin,
+  .globe-hero .cloud-1,
+  .globe-hero .cloud-2 {
+    animation: none;
+  }
+}
