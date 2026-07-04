@@ -5,21 +5,53 @@ import { useAuthStore } from '../store/auth';
 import { useTripStore } from '../store/trip';
 import Avatar from './Avatar';
 
+const TYPING_VISIBLE_MS = 3000;
+const TYPING_THROTTLE_MS = 1500;
+
 export default function ChatTab({ canEdit }: { canEdit: boolean }) {
-  const { messages, tripId } = useTripStore();
+  const { messages, tripId, typing } = useTripStore();
   const user = useAuthStore((s) => s.user);
   const [text, setText] = useState('');
+  const [, tick] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const lastTypingSent = useRef(0);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  // Re-render every second so the typing indicator expires on time.
+  useEffect(() => {
+    const t = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const showTyping =
+    typing &&
+    typing.userId !== user?.id &&
+    Date.now() - typing.at < TYPING_VISIBLE_MS;
+
+  function onType(value: string) {
+    setText(value);
+    if (!tripId) return;
+    const now = Date.now();
+    if (now - lastTypingSent.current > TYPING_THROTTLE_MS) {
+      lastTypingSent.current = now;
+      socket.sendTyping(tripId);
+    }
+  }
 
   function send(e: FormEvent) {
     e.preventDefault();
     if (!text.trim() || !tripId) return;
     socket.sendMessage(tripId, text.trim());
     setText('');
+    inputRef.current?.focus();
   }
 
   return (
@@ -58,13 +90,22 @@ export default function ChatTab({ canEdit }: { canEdit: boolean }) {
         })}
         <div ref={bottomRef} />
       </div>
+      <div className="h-5 px-1 pt-1 text-xs text-gray-400">
+        {showTyping && (
+          <span className="fade-in inline-flex items-center gap-1">
+            <span className="typing-dots"><i /><i /><i /></span>
+            {typing!.name} is typing…
+          </span>
+        )}
+      </div>
       {canEdit && (
-        <form onSubmit={send} className="mt-3 flex gap-2">
+        <form onSubmit={send} className="mt-1 flex gap-2">
           <input
+            ref={inputRef}
             className="input flex-1"
             placeholder="Message the crew…"
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => onType(e.target.value)}
           />
           <button className="btn-primary" disabled={!text.trim()}>
             Send

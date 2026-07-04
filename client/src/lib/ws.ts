@@ -73,6 +73,10 @@ class FableSocket {
     this.send({ type: 'SEND_MESSAGE', tripId, content });
   }
 
+  sendTyping(tripId: string) {
+    this.send({ type: 'TYPING', tripId });
+  }
+
   private send(data: unknown) {
     if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify(data));
   }

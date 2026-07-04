@@ -35,6 +35,7 @@ interface TripState {
   packing: PackingItem[];
   messages: Message[];
   presence: User[];
+  typing: { userId: string; name: string; at: number } | null;
   selectedDayId: string | null;
   highlightPlaceId: string | null;
   loading: boolean;
@@ -62,9 +63,17 @@ const empty = {
   packing: [] as PackingItem[],
   messages: [] as Message[],
   presence: [] as User[],
+  typing: null as { userId: string; name: string; at: number } | null,
   selectedDayId: null as string | null,
   highlightPlaceId: null as string | null,
 };
+
+function localToday(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+    d.getDate(),
+  ).padStart(2, '0')}`;
+}
 
 export const useTripStore = create<TripState>((set, get) => ({
   tripId: null,
@@ -90,7 +99,9 @@ export const useTripStore = create<TripState>((set, get) => ({
       budget,
       packing,
       messages,
-      selectedDayId: detail.days[0]?.id ?? null,
+      // If the trip is happening right now, open today's plan first.
+      selectedDayId:
+        (detail.days.find((d) => d.date === localToday()) ?? detail.days[0])?.id ?? null,
       loading: false,
     });
   },
@@ -135,6 +146,9 @@ export const useTripStore = create<TripState>((set, get) => ({
         break;
       case 'PRESENCE':
         set({ presence: p.users });
+        break;
+      case 'TYPING':
+        set({ typing: { userId: p.userId, name: p.name, at: Date.now() } });
         break;
       case 'DAY_ADDED':
         set({ days: [...upsert(s.days, p)].sort((a, b) => a.date.localeCompare(b.date)) });

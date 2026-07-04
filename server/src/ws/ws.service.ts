@@ -108,6 +108,11 @@ export class WsService {
         this.sendPresence(msg.tripId);
         break;
       }
+      case 'TYPING': {
+        if (typeof msg.tripId !== 'string' || !client.trips.has(msg.tripId)) return;
+        this.broadcast(msg.tripId, 'TYPING', { userId: client.userId, name: client.name });
+        break;
+      }
       case 'SEND_MESSAGE': {
         if (typeof msg.tripId !== 'string') return;
         const role = this.memberRole(msg.tripId, client.userId);
