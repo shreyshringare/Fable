@@ -27,6 +27,18 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-leaflet': ['leaflet', 'leaflet.markercluster'],
+          'vendor-recharts': ['recharts'],
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

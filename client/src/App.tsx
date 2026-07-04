@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { api } from './lib/api';
 import { socket } from './lib/ws';
@@ -8,7 +8,8 @@ import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import RegisterPage from './pages/RegisterPage';
-import TripPage from './pages/TripPage';
+
+const TripPage = lazy(() => import('./pages/TripPage'));
 
 function Protected() {
   const { user, booted } = useAuthStore();
@@ -48,7 +49,21 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/trips/:tripId" element={<TripPage />} />
+          <Route
+            path="/trips/:tripId"
+            element={
+              <Suspense
+                fallback={
+                  <div className="mx-auto max-w-7xl space-y-4 px-4 py-8">
+                    <div className="skeleton h-10 w-64" />
+                    <div className="skeleton h-96 w-full" />
+                  </div>
+                }
+              >
+                <TripPage />
+              </Suspense>
+            }
+          />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
