@@ -1,0 +1,16 @@
+{
+  "name": "fable",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Fable — self-hosted, real-time collaborative trip planner",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "build": "npm run build -w @fable/server && npm run build -w @fable/client",
+    "dev:server": "npm run dev -w @fable/server",
+    "dev:client": "npm run dev -w @fable/client",
+    "start": "node server/dist/main.js"
+  }
+}

@@ -1,0 +1,16 @@
+services:
+  fable:
+    build: .
+    container_name: fable
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+    restart: unless-stopped
