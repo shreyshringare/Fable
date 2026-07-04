@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { api } from '../lib/api';
 import { formatMoney } from '../lib/currency';
+import { buildTripICS, downloadICS } from '../lib/ics';
 import { useTripStore } from '../store/trip';
 import type { Reservation } from '../types';
 import Modal from './Modal';
@@ -14,7 +15,7 @@ const TYPE_STYLE: Record<Reservation['type'], { icon: string; color: string; lab
 };
 
 export default function ReservationsTab({ canEdit }: { canEdit: boolean }) {
-  const { reservations, tripId } = useTripStore();
+  const { reservations, tripId, trip } = useTripStore();
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({
     type: 'flight',
@@ -59,11 +60,27 @@ export default function ReservationsTab({ canEdit }: { canEdit: boolean }) {
     <div>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-bold">Reservations</h2>
-        {canEdit && (
-          <button className="btn-primary" onClick={() => setShowAdd(true)}>
-            + Add reservation
-          </button>
-        )}
+        <div className="flex gap-2">
+          {reservations.length > 0 && trip && (
+            <button
+              className="btn-secondary"
+              title="Download as calendar file (Google Calendar, Outlook, Apple)"
+              onClick={() =>
+                downloadICS(
+                  `${trip.name.replace(/[^\w-]+/g, '-').toLowerCase()}.ics`,
+                  buildTripICS(trip, reservations),
+                )
+              }
+            >
+              📅 Export .ics
+            </button>
+          )}
+          {canEdit && (
+            <button className="btn-primary" onClick={() => setShowAdd(true)}>
+              + Add reservation
+            </button>
+          )}
+        </div>
       </div>
 
       {sorted.length === 0 ? (
