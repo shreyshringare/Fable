@@ -49,6 +49,16 @@ export default function LorePanel({ place, onClose }: { place: Place; onClose: (
           {lore.about && (
             <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{lore.about}</p>
           )}
+          {lore.official_website && (
+            <a
+              href={lore.official_website}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary !py-1.5 text-xs"
+            >
+              🌐 Official website ↗
+            </a>
+          )}
           {lore.facts.length === 0 && lore.about && (
             <p className="text-sm italic text-gray-500 dark:text-gray-400">
               No myths or legends recorded for this spot — maybe you'll write the first one.

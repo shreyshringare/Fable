@@ -45,6 +45,7 @@ export interface Place {
   photo_url: string | null;
   rating: number | null;
   hours: string | null;
+  website: string | null;
 }
 
 export interface DayNote {
@@ -113,6 +114,7 @@ export interface LoreResult {
   query: string;
   about: string | null;
   image: string | null;
+  official_website: string | null;
   facts: LoreFact[];
 }
 

@@ -12,6 +12,7 @@ export default function PlaceEditModal({ place, onClose }: { place: Place; onClo
     rating: place.rating != null ? String(place.rating) : '',
     hours: place.hours ?? '',
     notes: place.notes ?? '',
+    website: place.website ?? '',
   });
   const [photo, setPhoto] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
@@ -29,6 +30,7 @@ export default function PlaceEditModal({ place, onClose }: { place: Place; onClo
         rating: form.rating === '' ? undefined : Number(form.rating),
         hours: form.hours || undefined,
         notes: form.notes || undefined,
+        website: form.website || undefined,
         ...(photo_url ? { photo_url } : {}),
       });
       onClose();
@@ -83,6 +85,16 @@ export default function PlaceEditModal({ place, onClose }: { place: Place; onClo
             className="input"
             value={form.address}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="label">Website</label>
+          <input
+            type="url"
+            className="input"
+            placeholder="https://example.com"
+            value={form.website}
+            onChange={(e) => setForm({ ...form, website: e.target.value })}
           />
         </div>
         <div>

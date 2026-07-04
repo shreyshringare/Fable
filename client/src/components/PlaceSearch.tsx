@@ -36,6 +36,7 @@ export default function PlaceSearch({ dayId }: { dayId: string }) {
       lng: r.lng,
       address: r.display_name,
       category: r.category,
+      website: r.website ?? undefined,
     });
   }
 

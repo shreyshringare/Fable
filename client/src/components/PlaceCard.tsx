@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useState } from 'react';
 import { api } from '../lib/api';
-import { categoryIcon } from '../lib/nominatim';
+import { categoryIcon, directionsUrl } from '../lib/nominatim';
 import { useTripStore } from '../store/trip';
 import type { Place } from '../types';
 import LorePanel from './LorePanel';
@@ -73,6 +73,32 @@ export default function PlaceCard({
           )}
           {place.hours && (
             <p className="text-xs text-gray-500 dark:text-gray-400">🕐 {place.hours}</p>
+          )}
+          {(place.website || (place.lat != null && place.lng != null)) && (
+            <p className="mt-1 flex flex-wrap gap-3 text-xs">
+              {place.website && (
+                <a
+                  href={place.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                >
+                  🌐 Website ↗
+                </a>
+              )}
+              {place.lat != null && place.lng != null && (
+                <a
+                  href={directionsUrl(place.lat, place.lng)}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-medium text-indigo-600 hover:underline dark:text-indigo-400"
+                >
+                  🧭 Directions ↗
+                </a>
+              )}
+            </p>
           )}
           {place.photo_url && (
             <img
