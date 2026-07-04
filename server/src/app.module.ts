@@ -14,6 +14,7 @@ import { HealthController } from './health.controller';
 
 export const UPLOAD_DIR =
   process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const clientDist =
   process.env.CLIENT_DIST || path.join(__dirname, '..', '..', 'client', 'dist');
