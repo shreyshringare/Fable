@@ -6,6 +6,7 @@ import { categoryIcon } from '../lib/nominatim';
 import { useTripStore } from '../store/trip';
 import type { Place } from '../types';
 import LorePanel from './LorePanel';
+import PlaceEditModal from './PlaceEditModal';
 
 export default function PlaceCard({
   place,
@@ -20,6 +21,7 @@ export default function PlaceCard({
   const [editingNotes, setEditingNotes] = useState(false);
   const [notes, setNotes] = useState(place.notes ?? '');
   const [showLore, setShowLore] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: place.id,
     disabled: !canEdit,
@@ -69,6 +71,16 @@ export default function PlaceCard({
           {place.address && (
             <p className="truncate text-xs text-gray-500 dark:text-gray-400">{place.address}</p>
           )}
+          {place.hours && (
+            <p className="text-xs text-gray-500 dark:text-gray-400">🕐 {place.hours}</p>
+          )}
+          {place.photo_url && (
+            <img
+              src={place.photo_url}
+              alt={place.name}
+              className="mt-2 h-24 w-full rounded-lg object-cover"
+            />
+          )}
           {editingNotes ? (
             <textarea
               className="input mt-2 text-sm"
@@ -100,17 +112,27 @@ export default function PlaceCard({
             📜
           </button>
           {canEdit && (
-            <button
-              onClick={remove}
-              title="Remove place"
-              className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30"
-            >
-              🗑️
-            </button>
+            <>
+              <button
+                onClick={() => setShowEdit(true)}
+                title="Edit place"
+                className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700"
+              >
+                ✏️
+              </button>
+              <button
+                onClick={remove}
+                title="Remove place"
+                className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30"
+              >
+                🗑️
+              </button>
+            </>
           )}
         </div>
       </div>
       {showLore && <LorePanel place={place} onClose={() => setShowLore(false)} />}
+      {showEdit && <PlaceEditModal place={place} onClose={() => setShowEdit(false)} />}
     </div>
   );
 }
