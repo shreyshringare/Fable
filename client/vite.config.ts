@@ -32,7 +32,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-leaflet': ['leaflet', 'leaflet.markercluster'],
+          'vendor-maplibre': ['maplibre-gl'],
           'vendor-recharts': ['recharts'],
           'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
         },
