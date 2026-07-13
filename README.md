@@ -13,6 +13,8 @@
 
 # 🧭 Fable
 
+**[Live Demo →](https://fable-tsu2.onrender.com)**
+
 ## 📸 Screenshots
 
 <table>
