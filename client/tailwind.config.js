@@ -8,18 +8,18 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
-        // Warm parchment tones replacing neutral gray
+        // Light: warm parchment — Dark: midnight starry-night blues
         gray: {
-          50:  '#faf5eb',
-          100: '#f2e8d4',
-          200: '#e0ccad',
-          300: '#c8ae8a',
-          400: '#a8906a',
-          500: '#876f50',
-          600: '#685438',
-          700: '#4a3c28',
-          800: '#2e2518',
-          900: '#1c1509',
+          50:  '#faf5eb',  // light bg (parchment)
+          100: '#dce8f8',  // dark primary text (cool starlight)
+          200: '#e0ccad',  // light border
+          300: '#c8ae8a',  // light muted border
+          400: '#7a96c0',  // dark secondary text (muted star-blue)
+          500: '#876f50',  // light secondary text
+          600: '#253655',  // dark hover/active borders
+          700: '#1a2740',  // dark borders
+          800: '#0f1a2e',  // dark card bg (deep navy)
+          900: '#090d1a',  // dark main bg (midnight sky)
         },
         // Cartographic sea-ink blue replacing indigo
         indigo: {
