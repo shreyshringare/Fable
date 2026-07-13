@@ -7,10 +7,34 @@
   <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Tests-24%20passing-brightgreen" alt="24 tests passing" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License" />
 </p>
 
 # 🧭 Fable
+
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/01-landing.png" alt="Landing page with animated globe" /></td>
+    <td><img src="docs/screenshots/02-dashboard.png" alt="Trip dashboard" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Landing — animated globe hero</em></td>
+    <td align="center"><em>Dashboard — trip cards with countdown chips</em></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/03-trip-planner.png" alt="Day planner with map" /></td>
+    <td><img src="docs/screenshots/04-budget.png" alt="Budget tracker with pie chart" /></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Planner — drag-and-drop days + live 3D map</em></td>
+    <td align="center"><em>Budget — pie chart + minimal settle-up</em></td>
+  </tr>
+</table>
+
+---
 
 **A self-hosted, real-time collaborative travel planner** — plan trips with friends using shared itineraries, drag-and-drop day planning, live maps, auto-settling budgets, packing lists, trip chat, and **Lore** — a unique feature that surfaces the myths, legends, and fiction behind every place you visit.
 

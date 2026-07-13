@@ -5,7 +5,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "ts-node src/main.ts",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "test": "jest"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
@@ -32,6 +33,23 @@
     "@types/node": "^20.17.0",
     "@types/ws": "^8.5.13",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "@nestjs/testing": "^10.4.15",
+    "@types/jest": "^29.5.12",
+    "@types/supertest": "^6.0.2",
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.5"
+  },
+  "jest": {
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "testRegex": "test/.*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "tsconfig.test.json" }]
+    },
+    "testEnvironment": "node",
+    "rootDir": ".",
+    "testTimeout": 30000,
+    "forceExit": true
   }
 }
