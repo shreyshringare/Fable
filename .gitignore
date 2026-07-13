@@ -1,8 +1,11 @@
 node_modules/
 dist/
 data/
-uploads/
+/uploads/
+/server/uploads/
+/client/uploads/
 *.log
 .env
 .DS_Store
 dev-dist/
+.gstack/
