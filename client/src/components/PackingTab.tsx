@@ -74,7 +74,7 @@ export default function PackingTab({ canEdit }: { canEdit: boolean }) {
         <select className="input !w-auto" value={filterCat} onChange={(e) => setFilterCat(e.target.value)}>
           <option value="">All categories</option>
           {CATEGORIES.map((c) => (
-            <option key={c}>{c}</option>
+            <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
           ))}
         </select>
         <select className="input !w-auto" value={filterPerson} onChange={(e) => setFilterPerson(e.target.value)}>
@@ -111,7 +111,7 @@ export default function PackingTab({ canEdit }: { canEdit: boolean }) {
                 {item.quantity > 1 && <span className="ml-1 text-xs text-gray-400">×{item.quantity}</span>}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {item.category}
+                {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
                 {item.assigned_to_user_id &&
                   ` · ${members.find((m) => m.id === item.assigned_to_user_id)?.name ?? '—'}`}
               </p>
@@ -135,7 +135,7 @@ export default function PackingTab({ canEdit }: { canEdit: boolean }) {
             <label className="label">Category</label>
             <select className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
               {CATEGORIES.map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
               ))}
             </select>
           </div>

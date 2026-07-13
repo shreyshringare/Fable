@@ -10,6 +10,7 @@ body,
 
 body {
   @apply bg-gray-50 text-gray-900 font-sans antialiased dark:bg-gray-900 dark:text-gray-100;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
 }
 
 .maplibregl-map {
@@ -20,9 +21,9 @@ body {
 /* Numbered 3D-ish map pins */
 .fable-pin {
   @apply flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white;
-  border: 2px solid #ffffff;
+  border: 2px solid #f2e8d4;
   box-shadow:
-    0 6px 10px -2px rgb(49 46 129 / 0.5),
+    0 6px 10px -2px rgb(27 79 105 / 0.5),
     0 2px 4px rgb(0 0 0 / 0.2);
   transition: transform 0.15s ease;
 }
