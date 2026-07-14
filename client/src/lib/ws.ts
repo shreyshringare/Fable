@@ -18,8 +18,10 @@ class FableSocket {
     if (!token || (this.ws && this.ws.readyState <= WebSocket.OPEN)) return;
     this.closedByUs = false;
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-    this.ws = new WebSocket(`${proto}://${location.host}/ws?token=${encodeURIComponent(token)}`);
+    this.ws = new WebSocket(`${proto}://${location.host}/ws`);
     this.ws.onopen = () => {
+      // Authenticate via first frame — token never appears in URL or server logs.
+      this.ws!.send(JSON.stringify({ type: 'AUTH', token }));
       const wasRetry = this.retry > 0;
       this.retry = 0;
       if (this.tripId) {
