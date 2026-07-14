@@ -15,7 +15,7 @@ import { diskStorage } from 'multer';
 import { UPLOAD_DIR } from '../app.module';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
-const KINDS = ['covers', 'places', 'reservations', 'avatars'];
+const KINDS = ['covers', 'places', 'reservations', 'avatars', 'documents'];
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 
 @Controller('uploads')
