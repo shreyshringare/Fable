@@ -320,3 +320,22 @@ export class UpdatePackingItemDto extends CreatePackingItemDto {
   @IsBoolean()
   packed?: boolean;
 }
+
+// ---------- Attachments ----------
+export class CreateAttachmentDto {
+  @IsString()
+  @MinLength(1)
+  name: string;
+
+  @IsString()
+  @MinLength(1)
+  url: string;
+
+  @IsString()
+  @MinLength(1)
+  mime_type: string;
+
+  @IsInt()
+  @Min(1)
+  size: number;
+}

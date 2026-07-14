@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AccessService } from './access.service';
+import { AttachmentsController } from './attachments.controller';
 import { BudgetController } from './budget.controller';
 import { DaysController } from './days.controller';
 import { MembersController } from './members.controller';
@@ -22,6 +23,7 @@ import { TripsService } from './trips.service';
     BudgetController,
     PackingController,
     MessagesController,
+    AttachmentsController,
   ],
   providers: [TripsService, AccessService],
 })
