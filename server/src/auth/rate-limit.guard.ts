@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  OnModuleDestroy,
 } from '@nestjs/common';
 
 interface Bucket {
@@ -13,11 +14,26 @@ interface Bucket {
 
 const WINDOW_MS = 60_000;
 const MAX_ATTEMPTS = 10;
-const buckets = new Map<string, Bucket>();
 
 /** Simple in-memory rate limiter for credential endpoints (per IP + route). */
 @Injectable()
-export class AuthRateLimitGuard implements CanActivate {
+export class AuthRateLimitGuard implements CanActivate, OnModuleDestroy {
+  private readonly buckets = new Map<string, Bucket>();
+  private readonly cleanupTimer: NodeJS.Timeout;
+
+  constructor() {
+    this.cleanupTimer = setInterval(() => {
+      const now = Date.now();
+      for (const [k, b] of this.buckets) {
+        if (b.resetAt < now) this.buckets.delete(k);
+      }
+    }, WINDOW_MS).unref();
+  }
+
+  onModuleDestroy() {
+    clearInterval(this.cleanupTimer);
+  }
+
   canActivate(ctx: ExecutionContext): boolean {
     const req = ctx.switchToHttp().getRequest();
     const ip =
@@ -26,9 +42,9 @@ export class AuthRateLimitGuard implements CanActivate {
       'unknown';
     const key = `${ip}:${req.route?.path ?? req.url}`;
     const now = Date.now();
-    const bucket = buckets.get(key);
+    const bucket = this.buckets.get(key);
     if (!bucket || bucket.resetAt < now) {
-      buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
+      this.buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
       return true;
     }
     bucket.count += 1;
@@ -41,9 +57,3 @@ export class AuthRateLimitGuard implements CanActivate {
     return true;
   }
 }
-
-// Prevent unbounded growth: sweep expired buckets occasionally.
-setInterval(() => {
-  const now = Date.now();
-  for (const [k, b] of buckets) if (b.resetAt < now) buckets.delete(k);
-}, WINDOW_MS).unref();

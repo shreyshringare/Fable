@@ -55,24 +55,25 @@ describe('Messages (integration)', () => {
     await app.close();
   });
 
-  it('GET /messages → 200 returns messages', async () => {
+  it('GET /messages → 200 returns { messages, nextCursor }', async () => {
     const res = await request(app.getHttpServer())
       .get(`/api/v1/trips/${tripId}/messages`)
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
-    const msgs = Array.isArray(res.body) ? res.body : res.body.messages;
-    expect(msgs).toHaveLength(5);
-    expect(msgs[0]).toHaveProperty('content');
-    expect(msgs[0]).toHaveProperty('user_name');
+    expect(Array.isArray(res.body.messages)).toBe(true);
+    expect(res.body.messages).toHaveLength(5);
+    expect(res.body).toHaveProperty('nextCursor');
+    expect(res.body.messages[0]).toHaveProperty('content');
+    expect(res.body.messages[0]).toHaveProperty('user_name');
   });
 
-  it('GET /messages?limit=2 → returns only 2', async () => {
+  it('GET /messages?limit=2 → returns 2 messages and nextCursor', async () => {
     const res = await request(app.getHttpServer())
       .get(`/api/v1/trips/${tripId}/messages?limit=2`)
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
-    const msgs = Array.isArray(res.body) ? res.body : res.body.messages;
-    expect(msgs).toHaveLength(2);
+    expect(res.body.messages).toHaveLength(2);
+    expect(res.body.nextCursor).not.toBeNull();
   });
 
   it('viewer can GET → 200', async () => {

@@ -14,6 +14,8 @@ interface WsClient {
   alive: boolean;
 }
 
+const AUTH_TIMEOUT_MS = 5_000;
+
 @Injectable()
 export class WsService {
   private clients = new Set<WsClient>();
@@ -26,8 +28,6 @@ export class WsService {
   attach(server: HttpServer) {
     const wss = new WebSocketServer({ server, path: '/ws' });
 
-    // Heartbeat: terminate connections that miss two ping cycles so
-    // presence never shows ghosts after network drops.
     const heartbeat = setInterval(() => {
       for (const c of this.clients) {
         if (!c.alive) {
@@ -41,46 +41,60 @@ export class WsService {
     heartbeat.unref();
     wss.on('close', () => clearInterval(heartbeat));
 
-    wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
-      const url = new URL(req.url || '/', 'http://localhost');
-      const token = url.searchParams.get('token') || '';
-      let payload: { sub: string };
-      try {
-        payload = this.jwt.verify(token);
-      } catch {
-        ws.close(4001, 'unauthorized');
-        return;
-      }
-      const user = this.dbs.db
-        .prepare('SELECT id, name, avatar_url FROM users WHERE id = ?')
-        .get(payload.sub) as { id: string; name: string; avatar_url: string | null } | undefined;
-      if (!user) {
-        ws.close(4001, 'unauthorized');
-        return;
-      }
-      const client: WsClient = {
-        ws,
-        userId: user.id,
-        name: user.name,
-        avatarUrl: user.avatar_url,
-        trips: new Set(),
-        alive: true,
-      };
-      this.clients.add(client);
-      ws.on('pong', () => {
-        client.alive = true;
-      });
-      ws.on('message', (raw) => {
+    wss.on('connection', (ws: WebSocket, _req: IncomingMessage) => {
+      const authTimeout = setTimeout(() => {
+        ws.close(4001, 'auth timeout');
+      }, AUTH_TIMEOUT_MS);
+
+      ws.once('message', (raw) => {
+        clearTimeout(authTimeout);
+        let msg: { type?: string; token?: string };
         try {
-          this.onMessage(client, JSON.parse(String(raw)));
+          msg = JSON.parse(String(raw));
         } catch {
-          /* ignore malformed frames */
+          ws.close(4001, 'bad auth frame');
+          return;
         }
-      });
-      ws.on('close', () => {
-        const trips = [...client.trips];
-        this.clients.delete(client);
-        trips.forEach((t) => this.sendPresence(t));
+        if (msg.type !== 'AUTH' || typeof msg.token !== 'string') {
+          ws.close(4001, 'bad auth frame');
+          return;
+        }
+        let payload: { sub: string };
+        try {
+          payload = this.jwt.verify(msg.token);
+        } catch {
+          ws.close(4001, 'unauthorized');
+          return;
+        }
+        const user = this.dbs.db
+          .prepare('SELECT id, name, avatar_url FROM users WHERE id = ?')
+          .get(payload.sub) as { id: string; name: string; avatar_url: string | null } | undefined;
+        if (!user) {
+          ws.close(4001, 'unauthorized');
+          return;
+        }
+        const client: WsClient = {
+          ws,
+          userId: user.id,
+          name: user.name,
+          avatarUrl: user.avatar_url,
+          trips: new Set(),
+          alive: true,
+        };
+        this.clients.add(client);
+        ws.on('pong', () => { client.alive = true; });
+        ws.on('message', (data) => {
+          try {
+            this.onMessage(client, JSON.parse(String(data)));
+          } catch {
+            /* ignore malformed frames */
+          }
+        });
+        ws.on('close', () => {
+          const trips = [...client.trips];
+          this.clients.delete(client);
+          trips.forEach((t) => this.sendPresence(t));
+        });
       });
     });
   }
