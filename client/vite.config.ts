@@ -47,4 +47,9 @@ export default defineConfig({
       '/ws': { target: apiTarget.replace('http', 'ws'), ws: true },
     },
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/__tests__/setup.ts'],
+  },
 });
