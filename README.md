@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
-  <img src="https://img.shields.io/badge/Tests-24%20passing-brightgreen" alt="24 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-84%20passing-brightgreen" alt="84 tests passing" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License" />
 </p>
 
@@ -181,7 +181,7 @@ npm run dev:server
 npm run dev:client
 ```
 
-Open **http://localhost:5173** and register an account.
+Open [http://localhost:5173](http://localhost:5173) and register an account.
 
 ### Production (Docker)
 
@@ -194,7 +194,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-The app serves on **http://localhost:3000**. Data persists in `./data` (SQLite database) and `./uploads` (user-uploaded files).
+The app serves on [http://localhost:3000](http://localhost:3000). Data persists in `./data` (SQLite database) and `./uploads` (user-uploaded files).
 
 ### Manual Production Build
 
@@ -280,7 +280,13 @@ npm start          # Runs node server/dist/main.js — serves API + SPA + upload
 
 ### WebSocket Events
 
-Connect to `/ws?token=<accessToken>` and send/receive JSON frames:
+Connect to `/ws` (no token in URL). After the connection opens, send an AUTH frame immediately:
+
+```json
+{"type":"AUTH","token":"<accessToken>"}
+```
+
+The server closes with `4001` if no AUTH frame arrives within 5 seconds, or if the token is invalid. Then send/receive normal JSON frames:
 
 | Direction | Event | Description |
 |-----------|-------|-------------|
@@ -302,7 +308,7 @@ Connect to `/ws?token=<accessToken>` and send/receive JSON frames:
 
 ## 🗄️ Database Schema
 
-SQLite with 10 tables, managed via sequential raw SQL migrations:
+SQLite with 12 tables, managed via sequential raw SQL migrations:
 
 ```
 users ──────────┐
