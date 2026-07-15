@@ -71,6 +71,21 @@ export interface Reservation {
   attachment_url: string | null;
 }
 
+export interface ReservationAttachment {
+  id: string;
+  reservation_id: string;
+  trip_id: string;
+  uploaded_by: string;
+  name: string;
+  url: string;
+  mime_type: string;
+  size: number;
+  created_at: string;
+  // Present only in GET /trips/:id/documents (aggregated endpoint)
+  reservation_title?: string;
+  reservation_type?: string;
+}
+
 export interface BudgetItem {
   id: string;
   trip_id: string;

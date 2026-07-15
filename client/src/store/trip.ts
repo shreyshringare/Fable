@@ -9,6 +9,7 @@ import type {
   PackingItem,
   Place,
   Reservation,
+  ReservationAttachment,
   Trip,
   TripDetail,
   User,
@@ -31,6 +32,7 @@ interface TripState {
   places: Place[];
   notes: DayNote[];
   reservations: Reservation[];
+  documents: ReservationAttachment[];
   budget: BudgetItem[];
   packing: PackingItem[];
   messages: Message[];
@@ -59,6 +61,7 @@ const empty = {
   places: [] as Place[],
   notes: [] as DayNote[],
   reservations: [] as Reservation[],
+  documents: [] as ReservationAttachment[],
   budget: [] as BudgetItem[],
   packing: [] as PackingItem[],
   messages: [] as Message[],
@@ -82,9 +85,10 @@ export const useTripStore = create<TripState>((set, get) => ({
 
   load: async (tripId) => {
     set({ tripId, loading: true, ...empty });
-    const [detail, reservations, budget, packing, messages] = await Promise.all([
+    const [detail, reservations, documents, budget, packing, messages] = await Promise.all([
       api.get<TripDetail>(`/trips/${tripId}`),
       api.get<Reservation[]>(`/trips/${tripId}/reservations`),
+      api.get<ReservationAttachment[]>(`/trips/${tripId}/documents`),
       api.get<BudgetItem[]>(`/trips/${tripId}/budget`),
       api.get<PackingItem[]>(`/trips/${tripId}/packing`),
       api.get<Message[]>(`/trips/${tripId}/messages`),
@@ -96,6 +100,7 @@ export const useTripStore = create<TripState>((set, get) => ({
       places: detail.places,
       notes: detail.notes,
       reservations,
+      documents,
       budget,
       packing,
       messages,
@@ -218,6 +223,15 @@ export const useTripStore = create<TripState>((set, get) => ({
       case 'MESSAGE_SENT':
         set({ messages: upsert(s.messages, p) });
         break;
+      case 'DOCUMENTS_UPDATED': {
+        const { action, item } = p;
+        if (action === 'added') {
+          set({ documents: [...s.documents, item] });
+        } else if (action === 'deleted') {
+          set({ documents: s.documents.filter((d) => d.id !== item.id) });
+        }
+        break;
+      }
       default:
         break;
     }
