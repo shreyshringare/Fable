@@ -6,6 +6,7 @@ import { buildTripICS, downloadICS } from '../lib/ics';
 import { useTripStore } from '../store/trip';
 import type { Reservation } from '../types';
 import Modal from './Modal';
+import DocumentsSidebar from './DocumentsSidebar';
 
 const TYPE_STYLE: Record<Reservation['type'], { icon: string; color: string; label: string }> = {
   flight: { icon: '✈️', color: 'border-sky-400 bg-sky-50 dark:bg-sky-900/20', label: 'Flight' },
@@ -15,8 +16,10 @@ const TYPE_STYLE: Record<Reservation['type'], { icon: string; color: string; lab
 };
 
 export default function ReservationsTab({ canEdit }: { canEdit: boolean }) {
-  const { reservations, tripId, trip } = useTripStore();
+  const { reservations, tripId, trip, documents } = useTripStore();
   const [showAdd, setShowAdd] = useState(false);
+  const [showDocs, setShowDocs] = useState(false);
+  const [uploadingFor, setUploadingFor] = useState<string | null>(null);
   const [form, setForm] = useState({
     type: 'flight',
     title: '',
@@ -56,6 +59,24 @@ export default function ReservationsTab({ canEdit }: { canEdit: boolean }) {
     await api.delete(`/trips/${tripId}/reservations/${id}`);
   }
 
+  async function uploadFile(resId: string, file: File) {
+    setUploadingFor(resId);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const { url } = await api.upload<{ url: string }>('/uploads/documents', form);
+      await api.post(`/trips/${tripId}/reservations/${resId}/attachments`, {
+        name: file.name, url, mime_type: file.type, size: file.size,
+      });
+    } finally {
+      setUploadingFor(null);
+    }
+  }
+
+  async function removeAttachment(resId: string, attachId: string) {
+    await api.delete(`/trips/${tripId}/reservations/${resId}/attachments/${attachId}`);
+  }
+
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
@@ -75,6 +96,9 @@ export default function ReservationsTab({ canEdit }: { canEdit: boolean }) {
               📅 Export .ics
             </button>
           )}
+          <button className="btn-secondary" onClick={() => setShowDocs(true)}>
+            📎 All Documents
+          </button>
           {canEdit && (
             <button className="btn-primary" onClick={() => setShowAdd(true)}>
               + Add reservation
@@ -141,6 +165,58 @@ export default function ReservationsTab({ canEdit }: { canEdit: boolean }) {
                     )}
                   </div>
                 </div>
+                {(() => {
+                  const resAttachments = documents.filter((d) => d.reservation_id === r.id);
+                  return (
+                    <div className="mt-2 border-t border-gray-100 pt-2 dark:border-gray-700">
+                      {resAttachments.length > 0 && (
+                        <div className="mb-1 flex flex-wrap gap-2">
+                          {resAttachments.map((a) => (
+                            <div
+                              key={a.id}
+                              className="flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs dark:bg-gray-700"
+                            >
+                              <span>{a.mime_type === 'application/pdf' ? '📄' : '🖼️'}</span>
+                              <a
+                                href={a.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="max-w-[120px] truncate text-indigo-600 hover:underline dark:text-indigo-400"
+                              >
+                                {a.name}
+                              </a>
+                              {canEdit && (
+                                <button
+                                  onClick={() => removeAttachment(r.id, a.id)}
+                                  className="ml-1 text-gray-400 hover:text-red-600"
+                                  title="Remove"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {canEdit && (
+                        <label className="cursor-pointer text-xs text-indigo-600 hover:underline dark:text-indigo-400">
+                          {uploadingFor === r.id ? 'Uploading…' : '📎 Attach file'}
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            className="hidden"
+                            disabled={uploadingFor !== null}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) uploadFile(r.id, file);
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
@@ -244,6 +320,10 @@ export default function ReservationsTab({ canEdit }: { canEdit: boolean }) {
             </div>
           </form>
         </Modal>
+      )}
+
+      {showDocs && (
+        <DocumentsSidebar tripId={tripId!} onClose={() => setShowDocs(false)} canEdit={canEdit} />
       )}
     </div>
   );

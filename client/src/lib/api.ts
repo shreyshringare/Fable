@@ -81,6 +81,8 @@ export const api = {
       method: 'POST',
       body: body instanceof FormData ? body : JSON.stringify(body ?? {}),
     }),
+  upload: <T = any>(path: string, body: FormData): Promise<T> =>
+    request<T>(path, { method: 'POST', body }),
   patch: <T>(path: string, body: unknown) =>
     request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
